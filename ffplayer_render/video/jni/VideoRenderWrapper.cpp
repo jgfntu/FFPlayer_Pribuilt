@@ -75,6 +75,13 @@ Surface* GetNativeSurface(JNIEnv* env, jobject jsurface) {
     jfieldID field_surface = NULL;
     for (unsigned int i = 0; i < sizeof(surface_field_names)/sizeof(surface_field_names[0]); i++) {
         field_surface = env->GetFieldID(clazz, surface_field_names[i], "I");
+        // check any pending exception first
+        if (env->ExceptionCheck()) {
+            // clear it
+            env->ExceptionClear();
+            __android_log_print(ANDROID_LOG_ERROR, TAG, "An exception occurred, continue!");
+            continue;
+        }
         if(field_surface != NULL) {
             break;
         }
