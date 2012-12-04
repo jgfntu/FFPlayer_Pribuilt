@@ -10,8 +10,10 @@
 using namespace android;
 #define CHECK_NATIVE_SURFACE(surface) \
     do { \
-        if(NULL == surface) \
-        return ANDROID_SURFACE_RESULT_JNI_EXCEPTION; \
+        if(NULL == surface) { \
+            __android_log_print(ANDROID_LOG_ERROR, TAG, "Surface is null at line:%d of function:%s!", __LINE__, __func__); \
+            return ANDROID_SURFACE_RESULT_JNI_EXCEPTION; \
+        } \
     } while (0)
 
 /**
@@ -83,11 +85,12 @@ Surface* GetNativeSurface(JNIEnv* env, jobject jsurface) {
             continue;
         }
         if(field_surface != NULL) {
+            __android_log_print(ANDROID_LOG_INFO, TAG, "got the surface field in android.view.Surface object!");
             break;
         }
     }
     if (field_surface == NULL) {
-        __android_log_print(ANDROID_LOG_INFO, TAG, "find surface field of class android.view.Surface failed!");
+        __android_log_print(ANDROID_LOG_INFO, TAG, "find surface field in class android.view.Surface failed!");
         return NULL;
     }
     return (Surface *) env->GetIntField(jsurface, field_surface);
@@ -106,7 +109,7 @@ int SurfaceWrapper_Register(JNIEnv* env, jobject jsurface) {
 }
 
 int SurfaceWrapper_GetPixels(int width, int height, void** pixels) {
-    __android_log_print(ANDROID_LOG_INFO, TAG, "getting surface's pixels %ix%i", width, height);
+    __android_log_print(ANDROID_LOG_INFO, TAG, "Get surface's pixels %ix%i", width, height);
     CHECK_NATIVE_SURFACE(surface);
 
     InitBitmap(&bmpClient, PIXEL_FORMAT_RGB_565, width, height);
@@ -116,7 +119,7 @@ int SurfaceWrapper_GetPixels(int width, int height, void** pixels) {
         return ANDROID_SURFACE_RESULT_COULDNT_INIT_BITMAP_CLIENT;
     }
     *pixels = bmpClient.getPixels();
-    __android_log_print(ANDROID_LOG_INFO, TAG, "surface's pixels getted");
+    __android_log_print(ANDROID_LOG_INFO, TAG, "surface's pixels got");
     return ANDROID_SURFACE_RESULT_SUCCESS;
 }
 
@@ -140,9 +143,11 @@ void UpdateSurface(bool autoscale) {
 int SurfaceWrapper_Update(bool autoscale) {
     CHECK_NATIVE_SURFACE(surface);
     if (!surface->isValid()) {
+        __android_log_print(ANDROID_LOG_ERROR, TAG, "Surface is invalid!");
         return ANDROID_SURFACE_RESULT_NOT_VALID;
     }
     if (surface->lock(&surfaceInfo) < 0) {
+        __android_log_print(ANDROID_LOG_ERROR, TAG, "Surface lock error!");
         return ANDROID_SURFACE_RESULT_COULDNT_LOCK;
     }
 
@@ -158,7 +163,10 @@ int SurfaceWrapper_Update(bool autoscale) {
     /* redraw surface screen */
     UpdateSurface(autoscale);
 
+    //__android_log_print(ANDROID_LOG_INFO, TAG, "Surface is %p!", surface);
+
     if (surface->unlockAndPost() < 0) {
+        __android_log_print(ANDROID_LOG_ERROR, TAG, "Surface unlockAndPost error!");
         return ANDROID_SURFACE_RESULT_COULDNT_UNLOCK_AND_POST;
     }
     return ANDROID_SURFACE_RESULT_SUCCESS;

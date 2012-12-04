@@ -28,8 +28,10 @@
 using namespace android;
 #define CHECK_AUDIO_TRACK(track) \
     do { \
-        if(NULL == track) \
-        return ANDROID_AUDIOTRACK_RESULT_JNI_EXCEPTION; \
+        if(NULL == track) {\
+            __android_log_print(ANDROID_LOG_ERROR, TAG, "ERROR! AudioTrack track is null"); \
+            return ANDROID_AUDIOTRACK_RESULT_JNI_EXCEPTION; \
+        } \
     } while (0)
 //struct audiotrack_fields_t {
 static AudioTrack* track;
